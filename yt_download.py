@@ -1,4 +1,5 @@
 from pytube import YouTube
+from pytube import Search
 
 def on_progress_callback(stream, chunk, bytes_remaining):
     """
@@ -52,6 +53,26 @@ def download_from_list(list_of_urls):
 # make stream with get audio only
 # make name path and download
 
+def download_given_yt_object(ytobject):
+    stream = ytobject.streams.get_highest_resolution()
+    name = stream.default_filename
+    path = "/mnt/c/Users/Hunter/Videos/YouTube/"
+    downloaded = stream.download(path, name)
+    if downloaded:
+        print()
+        print(f"Video \"{name}\" downloaded to {path}")
+        print(stream.filesize)
+
+
+
+def yt_search(query):
+    s = Search(query)
+    print(s.results)
+    print()
+    print(s.completion_suggestions)
+    print(len(s.results))
+    download_given_yt_object(s.results[0])
+
 def main():
     yt, stream = set_url_and_stream()
     name = stream.default_filename
@@ -75,19 +96,5 @@ def choose_method_of_download():
     else:
         choose_method_of_download()
 
-choose_method_of_download()
-# # Replace 'your_video_url' with the URL of the YouTube video you want to download.
-# url = 'https://www.youtube.com/watch?v=i43tkaTXtwI'
-
-# # Create a YouTube object
-# yt = YouTube(url, on_progress_callback=on_progress_callback)
-
-# # Get the highest resolution stream
-# video_stream = yt.streams.get_highest_resolution()
-
-# # Specify the destination where you want to save the video
-
-# # Download the video
-# video_stream.download(path)
-
-# print("Download complete.")
+yt_search("me myself and i geazy")
+# choose_method_of_download()
