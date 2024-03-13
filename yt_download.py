@@ -1,6 +1,30 @@
 from pytube import YouTube
 from pytube import Search
+from preferences import Preferences
+import yaml
 
+
+
+def get_preferences():
+    #read config.yaml
+    DEFAULT_PREFERENCES = "default_preferences"
+    USER_PREFERENCES = "user_preferences"
+    PREFERENCES = [DEFAULT_PREFERENCES, USER_PREFERENCES]
+    pptr = 1
+    with open('config.yaml', 'r') as f:
+        config = yaml.safe_load(f)
+    if USER_PREFERENCES not in config:
+        pptr = 0
+
+    resolution = config[PREFERENCES[pptr]]["resolution"]
+    video = config[PREFERENCES[pptr]]["video"]
+    path = config[PREFERENCES[pptr]]["path"]
+    list_file_name = config[PREFERENCES[pptr]]["list-file-name"]
+    session = config[PREFERENCES[pptr]]["session"]
+    p = Preferences(resolution, video, path, list_file_name, session)
+    return p
+
+# For displaying download progress on large downloads
 def on_progress_callback(stream, chunk, bytes_remaining):
     """
     Callback function to track the download progress.
@@ -10,49 +34,53 @@ def on_progress_callback(stream, chunk, bytes_remaining):
     percentage = (bytes_downloaded / total_size) * 100
     print(f"Downloaded: {percentage:.2f}%")
 
+# parse a list of urls from a file
 def get_list_of_urls(filename):
     with open(filename, "r") as f:
         lines = f.read().splitlines()
     f.close()
     return lines
 
-def set_url_and_stream():
+# Choose resolution or audio only for when downloading a single video
+def set_url_and_stream(preferences):
     url = input("URL: ")
     if url == "" or url is None:
         # url = "https://www.youtube.com/watch?v=i43tkaTXtwI"
-        url = "https://www.youtube.com/watch?v=mIYUih6Vy78"
+        url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
     yt = YouTube(url, on_progress_callback=on_progress_callback)
 
-    res = input("Resolution? 720, max: ")
-    if res == "720":
-        stream = yt.streams.get_by_itag(22)
+
+    if str(preferences.get_video()) == "video":
+        res = preferences.get_resolution()
+        stream = yt.streams.get_by_resolution(str(res))
         if stream is None:
             stream = yt.streams.get_highest_resolution()
-    elif res == "max":
-        stream = yt.streams.get_highest_resolution()
+        # if res == "720":
+        #     stream = yt.streams.get_by_itag(22)
+        #     if stream is None:
+        #         stream = yt.streams.get_highest_resolution()
+        # elif res == "max":
+        #     stream = yt.streams.get_highest_resolution()
     else:
         stream = yt.streams.get_audio_only()
     return yt, stream
 
-def download_from_list(list_of_urls):
+# Download all videos in a list of urls provided
+def download_from_list(list_of_urls, preferences):
     for url in list_of_urls:
         yt = YouTube(url, on_progress_callback=on_progress_callback)
         stream = yt.streams.get_audio_only()
         name = stream.default_filename
-        path = "/mnt/c/Users/Hunter/Videos/YouTube/"
+        path = preferences.get_path()
         downloaded = stream.download(path, name)
         if downloaded:
             print()
             print(f"Video \"{name}\" downloaded to {path}")
             print(stream.filesize)
             print(yt.description)
-# download audio from list
-# get list of urls from file
-# for url make yt object
-# make stream with get audio only
-# make name path and download
 
+# Works with yt_search or any yt object. Downloads a video with highest resolution given a yt object
 def download_given_yt_object(ytobject):
     stream = ytobject.streams.get_highest_resolution()
     name = stream.default_filename
@@ -65,6 +93,7 @@ def download_given_yt_object(ytobject):
 
 
 
+# Search given a query and returns a list of results
 def yt_search(query):
     s = Search(query)
     print(s.results)
@@ -73,10 +102,11 @@ def yt_search(query):
     print(len(s.results))
     download_given_yt_object(s.results[0])
 
-def main():
-    yt, stream = set_url_and_stream()
+# Download a single video given a url, rename this to something other than main
+def download_single_url(preferences):
+    yt, stream = set_url_and_stream(preferences)
     name = stream.default_filename
-    path = "/mnt/c/Users/Hunter/Videos/YouTube/"
+    path = preferences.get_path()
     downloaded = stream.download(path, name)
     if downloaded:
         print()
@@ -85,16 +115,26 @@ def main():
         print(yt.description)
 
 def choose_method_of_download():
-    choice = input("Single url or list of url? \n>url\n>list\n>")
+    preferences = get_preferences()
+    choice = input("Single url or list of url? \n>url\n>list\n>search\n>")
     if choice == "url":
-        main()
+        download_single_url(preferences)
         return
     elif choice == "list":
         urls = get_list_of_urls("urls.txt")
-        download_from_list(urls)
+        download_from_list(urls, preferences)
         return
+    elif choice == "search":
+        query = input("Search for a video: ")
+        yt_search(query)
     else:
         choose_method_of_download()
 
-yt_search("me myself and i geazy")
-# choose_method_of_download()
+# yt_search("me myself and i geazy")
+choose_method_of_download()
+# p = get_preferences()
+# print(p.mPath)
+# print(p.mResolution)
+# print(p.mVideo)
+# print(p.mListFileName)
+# print(p.mSessionType)
