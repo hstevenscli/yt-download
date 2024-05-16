@@ -1,6 +1,6 @@
 default_preferences:
   resolution: 720                                 #resolution to download
-  video: video                                   #capture video or just audio
+  video: audio                                   #capture video or just audio
   path: ./Youtube_Downloads       #path to download videos to
   list-file-name: urls.txt                        #name of file to pull a list of urls from
   session: url                                    #options are: list, url, search
