@@ -81,26 +81,29 @@ def download_from_list(list_of_urls, preferences):
             print(yt.description)
 
 # Works with yt_search or any yt object. Downloads a video with highest resolution given a yt object
-def download_given_yt_object(ytobject):
+def download_given_yt_object(ytobject, preferences):
     stream = ytobject.streams.get_highest_resolution()
     name = stream.default_filename
-    path = "/mnt/c/Users/Hunter/Videos/YouTube/"
+    path = preferences.get_path()
     downloaded = stream.download(path, name)
     if downloaded:
         print()
         print(f"Video \"{name}\" downloaded to {path}")
         print(stream.filesize)
 
-
-
 # Search given a query and returns a list of results
-def yt_search(query):
+def yt_search(query, preferences):
     s = Search(query)
-    print(s.results)
+    i = 0
+    for video in s.results:
+        print(str(i) + ":", video.title)
+        i += 1
+    user_choice = int(input("Which result would you like to download?\n> "))
+    # print(s.results)
     print()
     print(s.completion_suggestions)
     print(len(s.results))
-    download_given_yt_object(s.results[0])
+    download_given_yt_object(s.results[user_choice], preferences)
 
 # Download a single video given a url, rename this to something other than main
 def download_single_url(preferences):
@@ -124,9 +127,9 @@ def choose_method_of_download():
         urls = get_list_of_urls("urls.txt")
         download_from_list(urls, preferences)
         return
-    elif choice == "search":
+    elif choice == "search" or choice in "search":
         query = input("Search for a video: ")
-        yt_search(query)
+        yt_search(query, preferences)
     else:
         choose_method_of_download()
 
