@@ -125,14 +125,26 @@ def yt_search(query, preferences):
     for video in s.results:
         print(str(i) + ":", video.title)
         i += 1
-    user_choice = int(input("Which result would you like to download?\n> "))
+    user_choice = 9999
     while user_choice < 0 or user_choice >= len(s.results):
-        user_choice = int(input("Which result would you like to download?\n> "))
+        user_input = input("Which result would you like to download?\n> ")
+        if user_input.lower() == "search":
+            yt_search(query, preferences)
+            return
+        try:
+            user_choice = int(user_input)
+        except KeyboardInterrupt:
+            print("\nExiting the program")
+            return
+        except ValueError:
+            print("Please enter a number")
+
+
     # print(s.results)
     print()
     # print(s.completion_suggestions)
     print(len(s.results), "results found")
-    download_given_yt_object(s.results[user_choice], preferences)
+    download_given_yt_object(s.results[int(user_choice)], preferences)
 
 # Download a single video given a url, rename this to something other than main
 def download_single_url(preferences):
