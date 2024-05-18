@@ -1,3 +1,5 @@
+#! /usr/bin/python3
+
 from pytube import YouTube
 from pytube import Search
 from preferences import Preferences
@@ -23,6 +25,27 @@ def get_preferences():
     session = config[PREFERENCES[pptr]]["session"]
     p = Preferences(resolution, video, path, list_file_name, session)
     return p
+
+
+def edit_preferences():
+    resolution = input("Resolution: ")
+    video = input("video or audio: ")
+    path = input("path to download: ")
+    list_file_name = input("List of urls: ")
+    session = input("Session type: ")
+    with open('config.yaml', 'r') as f:
+        config = yaml.safe_load(f)
+
+    config["user_preferences"] = {
+        "resolution": int(resolution),
+        "video": video,
+        "path": path,
+        "list-file-name": list_file_name,
+        "session": session
+    }
+
+    with open('config.yaml', 'w') as f:
+        yaml.dump(config, f)
 
 # For displaying download progress on large downloads
 def on_progress_callback(stream, chunk, bytes_remaining):
@@ -82,7 +105,11 @@ def download_from_list(list_of_urls, preferences):
 
 # Works with yt_search or any yt object. Downloads a video with highest resolution given a yt object
 def download_given_yt_object(ytobject, preferences):
-    stream = ytobject.streams.get_highest_resolution()
+    print("preferences", preferences.get_video())
+    if preferences.get_video() == "video":
+        stream = ytobject.streams.get_highest_resolution()
+    else:
+        stream = ytobject.streams.get_audio_only()
     name = stream.default_filename
     path = preferences.get_path()
     downloaded = stream.download(path, name)
@@ -99,10 +126,12 @@ def yt_search(query, preferences):
         print(str(i) + ":", video.title)
         i += 1
     user_choice = int(input("Which result would you like to download?\n> "))
+    while user_choice < 0 or user_choice >= len(s.results):
+        user_choice = int(input("Which result would you like to download?\n> "))
     # print(s.results)
     print()
-    print(s.completion_suggestions)
-    print(len(s.results))
+    # print(s.completion_suggestions)
+    print(len(s.results), "results found")
     download_given_yt_object(s.results[user_choice], preferences)
 
 # Download a single video given a url, rename this to something other than main
@@ -119,7 +148,7 @@ def download_single_url(preferences):
 
 def choose_method_of_download():
     preferences = get_preferences()
-    choice = input("Single url or list of url? \n>url\n>list\n>search\n>")
+    choice = input("Single url or list of url? \n>url\n>list\n>search\n>preferences\n>")
     if choice == "url":
         download_single_url(preferences)
         return
@@ -130,6 +159,9 @@ def choose_method_of_download():
     elif choice == "search" or choice in "search":
         query = input("Search for a video: ")
         yt_search(query, preferences)
+    elif choice == "preferences":
+        edit_preferences()
+        choose_method_of_download()
     else:
         choose_method_of_download()
 
