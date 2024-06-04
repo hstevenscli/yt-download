@@ -9,4 +9,4 @@ user_preferences:
   path: ./Youtube_Downloads
   resolution: 720
   session: search
-  video: audio
+  video: video
